@@ -7,6 +7,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("A2M8")
 
+
+
+
         # Create a label
         self.label = QtWidgets.QLabel("ISAS")
         self.label.setAlignment(QtCore.Qt.AlignTop)
