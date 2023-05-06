@@ -6,7 +6,7 @@ from PIL import Image
 path = input("Enter path to directory: ")
 
 # Load logo image
-logo_path = (r"C:\Users\cicsstudent\Desktop\b\logo.png")
+logo_path = (r"E:\SACDA_Collections\SACDA 2023\2023_07 Labour Activism collection\working files\society_logo.png")
 
 logo = Image.open(logo_path)
 logo = logo.convert('RGBA')  # Add this line to convert logo to RGBA color mode

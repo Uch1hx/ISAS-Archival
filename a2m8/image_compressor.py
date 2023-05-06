@@ -12,7 +12,7 @@ for filename in os.listdir(directory_path):
     filepath = os.path.join(directory_path, filename)
     
     # check if the file is an image
-    if filepath.endswith(".jpg") or filepath.endswith(".jpeg") or filepath.endswith(".png"):
+    if filepath.endswith(".JPG") or filepath.endswith(".jpeg") or filepath.endswith(".png") or filepath.endswith(".jpg"):
         # open the image
         img = Image.open(filepath)
         
