@@ -3,6 +3,8 @@ from a2m8.mass_rename import mass_rename
 from a2m8.working_files_creator import working_files
 from a2m8.tif2jpg import do_tif2jpg
 from a2m8.masters_creator import create_master
+from a2m8.image_compressor import compress_images
+from a2m8.add_logo import doaddlogo
 import sys
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -17,8 +19,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label.setStyleSheet("font-size: 24pt;")
 
         # Create buttons
-        self.button1 = QtWidgets.QPushButton("Button 1")
-        self.button2 = QtWidgets.QPushButton("Button 2")
+        self.button1 = QtWidgets.QPushButton("Add Logo")
+        self.button2 = QtWidgets.QPushButton("Image Compressor")
         self.button3 = QtWidgets.QPushButton("Masters Creator")
         self.button4 = QtWidgets.QPushButton("TIF 2 JPG")
         self.button5 = QtWidgets.QPushButton("Working Files Creator")
@@ -44,6 +46,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(widget)
 
         # Connect button signals to slots
+        self.button1.clicked.connect(self.open_addlogo_window)
+        
+        self.button2.clicked.connect(self.open_imgcompress_window)
+
         self.button3.clicked.connect(self.open_masters_window)
 
         self.button6.clicked.connect(self.open_rename_window)
@@ -51,7 +57,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button5.clicked.connect(self.open_working_files_window)
 
         self.button4.clicked.connect(self.open_tif2jpg_window)
-
+   
+    def open_addlogo_window(self):
+            self.masters_window = AddLogoWindow()
+            self.masters_window.show()
+            self.masters_window.resize(800, 600)
     def open_masters_window(self):
         self.masters_window = MastersWindow()
         self.masters_window.show()
@@ -68,7 +78,122 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rename_window = TIF2JPGWindow()
         self.rename_window.show()
         self.rename_window.resize(800, 600)
+    def open_imgcompress_window(self):
+        self.rename_window = ImgCompressor()
+        self.rename_window.show()
+        self.rename_window.resize(800, 600)
 
+class AddLogoWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Add Logo")
+        
+        # Create a label to display the selected directory path
+        self.selected_path_label = QtWidgets.QLabel("No directory selected")
+        self.selected_path_label.setAlignment(QtCore.Qt.AlignCenter)
+
+        # Create a label to display the selected logo image
+        self.logo_label = QtWidgets.QLabel()
+        self.logo_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.logo_label.setFixedSize(200, 200)
+
+        # Create labels and line edits
+        self.label = QtWidgets.QLabel("Select the logo, then select a directory where the images are and press Add Logo")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.directorybutton = QtWidgets.QPushButton("...")
+        self.directorybutton.clicked.connect(self.select_directory)
+        self.logobutton = QtWidgets.QPushButton("Select Logo")
+        self.logobutton.clicked.connect(self.select_logo)
+        self.terminal = QtWidgets.QPlainTextEdit()
+        self.terminal.setReadOnly(True)
+        self.addlogobutton = QtWidgets.QPushButton("Add Logo")
+        self.addlogobutton.clicked.connect(self.do_addlogo)
+        self.closebutton = QtWidgets.QPushButton("Close")
+        self.closebutton.clicked.connect(self.close)
+        
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(widget)
+        layout.addWidget(self.label)
+        layout.addWidget(self.selected_path_label)
+        layout.addWidget(self.directorybutton)
+        layout.addWidget(self.logobutton)
+        layout.addWidget(self.logo_label) # Add the logo label to the layout
+        layout.addWidget(self.terminal)
+        layout.addWidget(self.addlogobutton)
+        layout.addWidget(self.closebutton)
+        self.setCentralWidget(widget)
+
+    def select_logo(self):
+        options = QtWidgets.QFileDialog.Options()
+        logo, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select Logo", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)", options=options)
+        if logo:
+            self.logo = logo
+            self.selected_path_label.setText(f"Selected logo: {logo}")
+            self.terminal.appendPlainText(f"Selected logo: {logo}")
+            # Load the selected logo image and display it on the logo label
+            pixmap = QtGui.QPixmap(self.logo)
+            pixmap = pixmap.scaled(self.logo_label.width(), self.logo_label.height(), QtCore.Qt.KeepAspectRatio)
+            self.logo_label.setPixmap(pixmap)
+
+
+    def select_directory(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.ShowDirsOnly
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
+        if directory:
+            self.directory = directory
+            self.selected_path_label.setText(f"Selected directory: {directory}")
+            self.terminal.appendPlainText(f"Selected directory: {directory}")
+
+    def do_addlogo(self):
+        self.terminal.appendPlainText("Adding logo...")
+        doaddlogo(self.directory, self.logo,terminal=self.terminal)
+        self.terminal.appendPlainText("Done!")
+
+class ImgCompressor(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Image Compressor")
+
+        # Create a label to display the selected directory path
+        self.selected_path_label = QtWidgets.QLabel("No directory selected")
+        self.selected_path_label.setAlignment(QtCore.Qt.AlignCenter)
+        # Create labels and line edits
+        self.label = QtWidgets.QLabel("Select a directory and press Compress")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.directorybutton = QtWidgets.QPushButton("...")
+        self.directorybutton.clicked.connect(self.select_directory)
+        self.terminal = QtWidgets.QPlainTextEdit()
+        self.terminal.setReadOnly(True)
+        self.compressbutton = QtWidgets.QPushButton("Compress")
+        self.compressbutton.clicked.connect(self.do_compress)
+        self.closebutton = QtWidgets.QPushButton("Close")
+        self.closebutton.clicked.connect(self.close)
+
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(widget)
+        layout.addWidget(self.label)
+        layout.addWidget(self.selected_path_label)
+        layout.addWidget(self.directorybutton)
+        layout.addWidget(self.terminal)
+        layout.addWidget(self.compressbutton)
+        layout.addWidget(self.closebutton)
+        self.setCentralWidget(widget)
+
+    def select_directory(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.ShowDirsOnly
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
+        if directory:
+            self.directory = directory
+            self.selected_path_label.setText(f"Selected directory: {directory}")
+    def do_compress(self):
+        self.terminal.appendPlainText("Compressing...")
+        self.terminal.appendPlainText("This may take a while, please wait")
+        compress_images(self.directory, self.terminal)
+        self.terminal.appendPlainText("Done!")
 class MastersWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -89,6 +214,8 @@ class MastersWindow(QtWidgets.QMainWindow):
         self.terminal.setReadOnly(True)
         self.Createbutton = QtWidgets.QPushButton("Create")
         self.Createbutton.clicked.connect(self.do_masters)
+        self.closebutton = QtWidgets.QPushButton("Close")
+        self.closebutton.clicked.connect(self.close)
 
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(widget)
@@ -99,6 +226,7 @@ class MastersWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.collectionid)
         layout.addWidget(self.terminal)
         layout.addWidget(self.Createbutton)
+        layout.addWidget(self.closebutton)
 
         # Set the central widget of the main window
         self.setCentralWidget(widget)
@@ -115,10 +243,11 @@ class MastersWindow(QtWidgets.QMainWindow):
         masterdir = self.directory
         collection_id = self.collectionid.text()
         self.label.setText("Processing...")
+        self.terminal.appendPlainText("Starting processing...")
         QtWidgets.QApplication.processEvents()
-        create_master(masterdir, collection_id)
+        create_master(masterdir, collection_id,terminal=self.terminal)
+        self.terminal.appendPlainText("Finished processing.")
         self.label.setText("Done.")
-
 class WorkingFilesTool(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -137,12 +266,15 @@ class WorkingFilesTool(QtWidgets.QWidget):
         self.terminal.setReadOnly(True)
         self.Createbutton = QtWidgets.QPushButton("Create")
         self.Createbutton.clicked.connect(self.do_working_files)
+        self.Closebutton = QtWidgets.QPushButton("Close")
+        self.Closebutton.clicked.connect(self.close)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.label)
         layout.addWidget(self.directorybutton)
         layout.addWidget(self.terminal)
         layout.addWidget(self.Createbutton)
+        layout.addWidget(self.Closebutton)
         self.setLayout(layout)
 
     def select_directory(self):
@@ -159,8 +291,6 @@ class WorkingFilesTool(QtWidgets.QWidget):
         QtWidgets.QApplication.processEvents()
         working_files(self.masterdir, self.terminal)
         self.label.setText("Done.")
-
-
 class RenameWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -185,11 +315,13 @@ class RenameWindow(QtWidgets.QMainWindow):
         # Create buttons
         self.directorybutton = QtWidgets.QPushButton("...")
         self.renamebutton = QtWidgets.QPushButton("Rename")
+        self.closebutton = QtWidgets.QPushButton("Close")
 
         # Add the labels, line edits, and buttons to layouts
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(self.directorybutton)
         button_layout.addWidget(self.renamebutton)
+        button_layout.addWidget(self.closebutton)
 
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
@@ -209,6 +341,7 @@ class RenameWindow(QtWidgets.QMainWindow):
         # Connect button signals to slots
         self.directorybutton.clicked.connect(self.select_directory)
         self.renamebutton.clicked.connect(lambda: self.mass_rename())
+        self.closebutton.clicked.connect(self.close)
 
     def select_directory(self):
         options = QtWidgets.QFileDialog.Options()
@@ -222,7 +355,6 @@ class RenameWindow(QtWidgets.QMainWindow):
         old_str = self.old_substring.text()
         new_str = self.new_substring.text()
         mass_rename(self.directory, old_str, new_str, self.terminal)
-
 class TIF2JPGWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -244,11 +376,13 @@ class TIF2JPGWindow(QtWidgets.QMainWindow):
         # Create buttons
         self.directorybutton = QtWidgets.QPushButton("...")
         self.convertbutton = QtWidgets.QPushButton("Convert")
+        self.closebutton = QtWidgets.QPushButton("Close")
 
         # Add the labels, line edits, and buttons to layouts
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(self.directorybutton)
         button_layout.addWidget(self.convertbutton)
+        button_layout.addWidget(self.closebutton)
 
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
@@ -264,11 +398,12 @@ class TIF2JPGWindow(QtWidgets.QMainWindow):
         # Connect button signals to slots
         self.directorybutton.clicked.connect(self.select_directory)
         self.convertbutton.clicked.connect(lambda: self.tif2jpg())
+        self.closebutton.clicked.connect(self.close)
 
     def tif2jpg(self):
         path = self.directory  # use the selected directory, not the label widget
         sys.stdout = self.terminal
-        do_tif2jpg(path)
+        do_tif2jpg(path,terminal=self.terminal)
         sys.stdout = sys.__stdout__
     def select_directory(self):
         options = QtWidgets.QFileDialog.Options()
